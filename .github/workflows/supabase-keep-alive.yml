@@ -1,15 +1,12 @@
-name: Keep Supabase database awake
+name: Manual Supabase database check
 
 on:
-  schedule:
-    # GitHub Actions 使用日历式 cron；每月按 1、6、11、16、21、26、31 日运行
-    - cron: "17 3 */5 * *"
   workflow_dispatch:
 
 permissions: {}
 
 jobs:
-  keep-alive:
+  check:
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
