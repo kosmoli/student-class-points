@@ -57,6 +57,7 @@
     @media (min-width:1250px) { .student-dense-grid { grid-template-columns:repeat(7,minmax(145px,1fr)); } }
     @media (max-width:850px) { .student-dense-grid { grid-template-columns:repeat(3,minmax(120px,1fr)); gap:7px; } .student-dense-item { grid-template-columns:minmax(0,1fr) 29px 28px 28px; gap:4px; padding-left:7px; padding-right:5px; } .student-dense-main { font-size:13px; } }
     @media (max-width:520px) { .student-dense-grid { grid-template-columns:repeat(2,minmax(125px,1fr)); } }
+    .home-layout { grid-template-columns:1fr; }
   </style>
 </head>
 <body>
@@ -150,6 +151,8 @@
     const cardBindView = bindView;
     bindView = function(){ cardBindView(); document.querySelectorAll('[data-quick-score]').forEach(b=>b.onclick=()=>{ const id=b.dataset.quickScore,ruleId=b.dataset.quickSign==='positive'?document.getElementById('quickPositiveRule')?.value:document.getElementById('quickNegativeRule')?.value; if(!ruleId){toast(b.dataset.quickSign==='positive'?'请先添加加分规则':'请先添加扣分规则');return;} score(id,ruleId); }); const qp=document.getElementById('quickPositiveRule'); if(qp)qp.onchange=()=>{state.quickPositiveRule=qp.value;}; const qn=document.getElementById('quickNegativeRule'); if(qn)qn.onchange=()=>{state.quickNegativeRule=qn.value;}; };
     studentRows = function(){ const all=filteredStudents(); if(!all.length)return '<div class="empty">没有找到学生</div>'; return `<div class="student-dense-grid">${all.map(s=>{const score=scoreFor(s.id);return `<div class="student-dense-item"><label class="student-dense-main"><input type="checkbox" class="student-check" data-id="${s.id}" ${state.selected.has(s.id)?'checked':''} aria-label="选择${esc(s.name)}"><span class="student-dense-name" title="${esc(s.name)}">${esc(s.name)}</span></label><span class="student-dense-score ${score<0?'negative':''}">${score}</span><button class="student-dense-btn minus" data-quick-score="${s.id}" data-quick-sign="negative" type="button" aria-label="给${esc(s.name)}减分">−</button><button class="student-dense-btn plus" data-quick-score="${s.id}" data-quick-sign="positive" type="button" aria-label="给${esc(s.name)}加分">＋</button></div>`}).join('')}</div>`; };
+    const denseHomeView = homeView;
+    homeView = function(){ return denseHomeView().replace('<div class="grid two" style="margin-top:18px">','<div class="grid home-layout" style="margin-top:18px">'); };
   </script>
 </body>
 </html>
