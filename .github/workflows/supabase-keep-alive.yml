@@ -1,0 +1,36 @@
+name: Keep Supabase database awake
+
+on:
+  schedule:
+    # GitHub Actions 使用日历式 cron；每月按 1、6、11、16、21、26、31 日运行
+    - cron: "17 3 */5 * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Run SELECT 1
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SUPABASE_DB_URL:-}" ]; then
+            echo "::error::Missing GitHub Actions secret SUPABASE_DB_URL"
+            exit 1
+          fi
+
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y postgresql-client
+          fi
+
+          result="$(psql "$SUPABASE_DB_URL"             --no-password             -v ON_ERROR_STOP=1             -At             -c "SELECT 1;")"
+
+          test "$result" = "1"
+          echo "Supabase database is reachable."
