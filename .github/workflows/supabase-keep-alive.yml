@@ -14,23 +14,19 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - name: Run SELECT 1
+      - name: Query Supabase
         env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
         run: |
           set -euo pipefail
 
-          if [ -z "${SUPABASE_DB_URL:-}" ]; then
-            echo "::error::Missing GitHub Actions secret SUPABASE_DB_URL"
-            exit 1
-          fi
+          : "${SUPABASE_URL:?Missing GitHub Actions secret SUPABASE_URL}"
+          : "${SUPABASE_PUBLISHABLE_KEY:?Missing GitHub Actions secret SUPABASE_PUBLISHABLE_KEY}"
 
-          if ! command -v psql >/dev/null 2>&1; then
-            sudo apt-get update
-            sudo apt-get install -y postgresql-client
-          fi
+          curl --fail --silent --show-error \
+            -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_PUBLISHABLE_KEY}" \
+            "${SUPABASE_URL%/}/rest/v1/classes?select=id&limit=1" >/dev/null
 
-          result="$(psql "$SUPABASE_DB_URL"             --no-password             -v ON_ERROR_STOP=1             -At             -c "SELECT 1;")"
-
-          test "$result" = "1"
-          echo "Supabase database is reachable."
+          echo "Supabase database was queried successfully."
