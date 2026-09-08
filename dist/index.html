@@ -42,6 +42,21 @@
     @media (max-width:1200px) { .student-card-grid { grid-template-columns:repeat(4,minmax(130px,1fr)); } }
     @media (max-width:850px) { .student-card-grid { grid-template-columns:repeat(3,minmax(110px,1fr)); gap:10px; } .student-card { min-height:132px; padding:14px 8px 11px; } .student-card-actions { padding:0 10px; } }
     @media (max-width:520px) { .student-card-grid { grid-template-columns:repeat(2,minmax(120px,1fr)); } }
+    .student-dense-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(175px,1fr)); gap:8px; }
+    .student-dense-item { min-width:0; min-height:48px; display:grid; grid-template-columns:minmax(0,1fr) 34px 30px 30px; align-items:center; gap:6px; padding:7px 8px 7px 10px; background:var(--surface-2); border:1px solid var(--line); border-radius:9px; transition:.12s ease; }
+    .student-dense-item:hover { background:#f5fbfb; border-color:var(--primary); }
+    .student-dense-main { min-width:0; display:flex; align-items:center; gap:6px; color:var(--ink); font-size:14px; font-weight:700; cursor:pointer; }
+    .student-dense-main input { width:15px; min-width:15px; min-height:15px; }
+    .student-dense-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .student-dense-score { font-size:17px; font-weight:800; text-align:center; color:var(--positive); }
+    .student-dense-score.negative { color:var(--negative); }
+    .student-dense-btn { width:30px; height:30px; padding:0; border-radius:7px; color:#fff; font-size:19px; line-height:1; }
+    .student-dense-btn.minus { background:#ef7078; }
+    .student-dense-btn.plus { background:#4dbb68; }
+    .student-dense-btn:hover { filter:brightness(.96); transform:translateY(-1px); }
+    @media (min-width:1250px) { .student-dense-grid { grid-template-columns:repeat(7,minmax(145px,1fr)); } }
+    @media (max-width:850px) { .student-dense-grid { grid-template-columns:repeat(3,minmax(120px,1fr)); gap:7px; } .student-dense-item { grid-template-columns:minmax(0,1fr) 29px 28px 28px; gap:4px; padding-left:7px; padding-right:5px; } .student-dense-main { font-size:13px; } }
+    @media (max-width:520px) { .student-dense-grid { grid-template-columns:repeat(2,minmax(125px,1fr)); } }
   </style>
 </head>
 <body>
@@ -134,6 +149,7 @@
     homeView = function(){ const positive=state.rules.filter(r=>Number(r.points)>0),negative=state.rules.filter(r=>Number(r.points)<0); if(!positive.some(r=>r.id===state.quickPositiveRule))state.quickPositiveRule=positive[0]?.id||''; if(!negative.some(r=>r.id===state.quickNegativeRule))state.quickNegativeRule=negative[0]?.id||''; const positiveOptions=positive.length?positive.map(r=>`<option value="${r.id}" ${state.quickPositiveRule===r.id?'selected':''}>快捷加分：${esc(r.name)}（${fmt(r.points)}）</option>`).join(''):'<option value="">暂无加分规则</option>'; const negativeOptions=negative.length?negative.map(r=>`<option value="${r.id}" ${state.quickNegativeRule===r.id?'selected':''}>快捷扣分：${esc(r.name)}（${fmt(r.points)}）</option>`).join(''):'<option value="">暂无扣分规则</option>'; return baseHomeView().replace('<label class="check-all"',`<select id="quickPositiveRule" class="student-group-filter">${positiveOptions}</select><select id="quickNegativeRule" class="student-group-filter">${negativeOptions}</select><label class="check-all"`); };
     const cardBindView = bindView;
     bindView = function(){ cardBindView(); document.querySelectorAll('[data-quick-score]').forEach(b=>b.onclick=()=>{ const id=b.dataset.quickScore,ruleId=b.dataset.quickSign==='positive'?document.getElementById('quickPositiveRule')?.value:document.getElementById('quickNegativeRule')?.value; if(!ruleId){toast(b.dataset.quickSign==='positive'?'请先添加加分规则':'请先添加扣分规则');return;} score(id,ruleId); }); const qp=document.getElementById('quickPositiveRule'); if(qp)qp.onchange=()=>{state.quickPositiveRule=qp.value;}; const qn=document.getElementById('quickNegativeRule'); if(qn)qn.onchange=()=>{state.quickNegativeRule=qn.value;}; };
+    studentRows = function(){ const all=filteredStudents(); if(!all.length)return '<div class="empty">没有找到学生</div>'; return `<div class="student-dense-grid">${all.map(s=>{const score=scoreFor(s.id);return `<div class="student-dense-item"><label class="student-dense-main"><input type="checkbox" class="student-check" data-id="${s.id}" ${state.selected.has(s.id)?'checked':''} aria-label="选择${esc(s.name)}"><span class="student-dense-name" title="${esc(s.name)}">${esc(s.name)}</span></label><span class="student-dense-score ${score<0?'negative':''}">${score}</span><button class="student-dense-btn minus" data-quick-score="${s.id}" data-quick-sign="negative" type="button" aria-label="给${esc(s.name)}减分">−</button><button class="student-dense-btn plus" data-quick-score="${s.id}" data-quick-sign="positive" type="button" aria-label="给${esc(s.name)}加分">＋</button></div>`}).join('')}</div>`; };
   </script>
 </body>
 </html>
