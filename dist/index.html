@@ -51,8 +51,8 @@
     .student-dense-score { font-size:17px; font-weight:800; text-align:center; color:var(--positive); }
     .student-dense-score.negative { color:var(--negative); }
     .student-dense-btn { width:30px; height:30px; padding:0; border-radius:7px; color:#fff; font-size:19px; line-height:1; }
-    .student-dense-btn.minus { background:#ef7078; }
-    .student-dense-btn.plus { background:#4dbb68; }
+    .student-dense-btn.minus { background:var(--negative-soft); color:var(--negative); }
+    .student-dense-btn.plus { background:var(--positive-soft); color:var(--positive); }
     .student-dense-btn:hover { filter:brightness(.96); transform:translateY(-1px); }
     @media (min-width:1250px) { .student-dense-grid { grid-template-columns:repeat(7,minmax(145px,1fr)); } }
     @media (max-width:850px) { .student-dense-grid { grid-template-columns:repeat(3,minmax(120px,1fr)); gap:7px; } .student-dense-item { grid-template-columns:minmax(0,1fr) 29px 28px 28px; gap:4px; padding-left:7px; padding-right:5px; } .student-dense-main { font-size:13px; } }
