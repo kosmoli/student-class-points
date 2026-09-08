@@ -42,20 +42,20 @@
     @media (max-width:1200px) { .student-card-grid { grid-template-columns:repeat(4,minmax(130px,1fr)); } }
     @media (max-width:850px) { .student-card-grid { grid-template-columns:repeat(3,minmax(110px,1fr)); gap:10px; } .student-card { min-height:132px; padding:14px 8px 11px; } .student-card-actions { padding:0 10px; } }
     @media (max-width:520px) { .student-card-grid { grid-template-columns:repeat(2,minmax(120px,1fr)); } }
-    .student-dense-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(175px,1fr)); gap:8px; }
-    .student-dense-item { min-width:0; min-height:48px; display:grid; grid-template-columns:minmax(0,1fr) 34px 30px 30px; align-items:center; gap:6px; padding:7px 8px 7px 10px; background:var(--surface-2); border:1px solid var(--line); border-radius:9px; transition:.12s ease; }
+    .student-dense-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:8px; }
+    .student-dense-item { min-width:0; min-height:48px; display:grid; grid-template-columns:minmax(0,1fr) 32px 28px 28px; align-items:center; gap:5px; padding:7px 7px 7px 9px; background:var(--surface-2); border:1px solid var(--line); border-radius:9px; transition:.12s ease; }
     .student-dense-item:hover { background:#f5fbfb; border-color:var(--primary); }
     .student-dense-main { min-width:0; display:flex; align-items:center; gap:6px; color:var(--ink); font-size:14px; font-weight:700; cursor:pointer; }
     .student-dense-main input { width:15px; min-width:15px; min-height:15px; }
     .student-dense-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .student-dense-score { font-size:17px; font-weight:800; text-align:center; color:var(--positive); }
     .student-dense-score.negative { color:var(--negative); }
-    .student-dense-btn { width:30px; height:30px; padding:0; border-radius:7px; color:#fff; font-size:19px; line-height:1; }
+    .student-dense-btn { width:28px; height:28px; padding:0; border-radius:7px; color:#fff; font-size:18px; line-height:1; }
     .student-dense-btn.minus { background:var(--negative-soft); color:var(--negative); }
     .student-dense-btn.plus { background:var(--positive-soft); color:var(--positive); }
     .student-dense-btn:hover { filter:brightness(.96); transform:translateY(-1px); }
-    @media (min-width:1250px) { .student-dense-grid { grid-template-columns:repeat(7,minmax(145px,1fr)); } }
-    @media (max-width:850px) { .student-dense-grid { grid-template-columns:repeat(3,minmax(120px,1fr)); gap:7px; } .student-dense-item { grid-template-columns:minmax(0,1fr) 29px 28px 28px; gap:4px; padding-left:7px; padding-right:5px; } .student-dense-main { font-size:13px; } }
+    @media (min-width:1250px) { .student-dense-grid { grid-template-columns:repeat(6,minmax(190px,1fr)); } }
+    @media (max-width:850px) { .student-dense-grid { grid-template-columns:repeat(3,minmax(120px,1fr)); gap:7px; } .student-dense-item { grid-template-columns:minmax(0,1fr) 29px 26px 26px; gap:4px; padding-left:7px; padding-right:5px; } .student-dense-main { font-size:13px; } }
     @media (max-width:520px) { .student-dense-grid { grid-template-columns:repeat(2,minmax(125px,1fr)); } }
     .home-layout { grid-template-columns:1fr; }
   </style>
