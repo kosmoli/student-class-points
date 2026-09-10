@@ -54,6 +54,12 @@
     .student-dense-btn.minus { background:var(--negative-soft); color:var(--negative); }
     .student-dense-btn.plus { background:var(--positive-soft); color:var(--positive); }
     .student-dense-btn:hover { filter:brightness(.96); transform:translateY(-1px); }
+    .quick-rule-list { display:grid; gap:9px; margin-top:14px; }
+    .quick-rule-option { width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; text-align:left; padding:12px 14px; border:1px solid var(--line); border-radius:11px; background:#f5fbfb; color:var(--ink); font-weight:700; }
+    .quick-rule-option.positive { color:var(--positive); background:var(--positive-soft); }
+    .quick-rule-option.negative { color:var(--negative); background:var(--negative-soft); }
+    .quick-rule-option:hover { filter:brightness(.97); transform:translateY(-1px); }
+    .quick-rule-help { color:var(--muted); font-size:14px; line-height:1.5; margin:0; }
     @media (min-width:1250px) { .student-dense-grid { grid-template-columns:repeat(6,minmax(190px,1fr)); } }
     @media (max-width:850px) { .student-dense-grid { grid-template-columns:repeat(3,minmax(120px,1fr)); gap:7px; } .student-dense-item { grid-template-columns:minmax(0,1fr) 29px 26px 26px; gap:4px; padding-left:7px; padding-right:5px; } .student-dense-main { font-size:13px; } }
     @media (max-width:520px) { .student-dense-grid { grid-template-columns:repeat(2,minmax(125px,1fr)); } }
@@ -149,9 +155,30 @@
     bindView = function(){ recordsBindView(); document.querySelectorAll('[data-record-page]').forEach(b=>b.onclick=()=>{state.recordPage=Number(b.dataset.recordPage);renderApp();}); const rs=document.getElementById('recordStudent'); if(rs)rs.onchange=()=>{state.recordStudent=rs.value;state.recordPage=1;renderApp();}; const rf=document.getElementById('recordFilter'); if(rf)rf.onchange=()=>{state.recordFilter=rf.value;state.recordPage=1;renderApp();}; };
     studentRows = function(){ const all=filteredStudents(); if(!all.length)return '<div class="empty">没有找到学生</div>'; return `<div class="student-card-grid">${all.map(s=>`<div class="student-card"><input type="checkbox" class="student-check" data-id="${s.id}" ${state.selected.has(s.id)?'checked':''} aria-label="选择${esc(s.name)}"><div class="student-card-name" title="${esc(s.name)}">${esc(s.name)}</div><div class="student-card-score">${scoreFor(s.id)}</div><div class="student-card-actions"><button class="student-card-btn minus" data-quick-score="${s.id}" data-quick-sign="negative" type="button" aria-label="给${esc(s.name)}减分">−</button><button class="student-card-btn plus" data-quick-score="${s.id}" data-quick-sign="positive" type="button" aria-label="给${esc(s.name)}加分">＋</button></div></div>`).join('')}</div>`; };
     const baseHomeView = homeView;
-    homeView = function(){ const positive=state.rules.filter(r=>Number(r.points)>0),negative=state.rules.filter(r=>Number(r.points)<0); if(!positive.some(r=>r.id===state.quickPositiveRule))state.quickPositiveRule=positive[0]?.id||''; if(!negative.some(r=>r.id===state.quickNegativeRule))state.quickNegativeRule=negative[0]?.id||''; const positiveOptions=positive.length?positive.map(r=>`<option value="${r.id}" ${state.quickPositiveRule===r.id?'selected':''}>快捷加分：${esc(r.name)}（${fmt(r.points)}）</option>`).join(''):'<option value="">暂无加分规则</option>'; const negativeOptions=negative.length?negative.map(r=>`<option value="${r.id}" ${state.quickNegativeRule===r.id?'selected':''}>快捷扣分：${esc(r.name)}（${fmt(r.points)}）</option>`).join(''):'<option value="">暂无扣分规则</option>'; return baseHomeView().replace('<label class="check-all"',`<select id="quickPositiveRule" class="student-group-filter">${positiveOptions}</select><select id="quickNegativeRule" class="student-group-filter">${negativeOptions}</select><label class="check-all"`); };
+    homeView = function(){ return baseHomeView(); };
+
+    function closeQuickRulePicker(){ const picker=document.querySelector('[data-quick-rule-picker]'); if(picker)picker.remove(); }
+    function openQuickRulePicker(studentId, sign){
+      const student=state.students.find(s=>s.id===studentId);
+      const rules=state.rules.filter(r=>sign==='positive'?Number(r.points)>0:Number(r.points)<0);
+      if(!rules.length){toast(sign==='positive'?'请先在设置中添加加分规则':'请先在设置中添加扣分规则');return;}
+      closeQuickRulePicker();
+      const title=sign==='positive'?'选择加分项目':'选择减分项目';
+      const actionText=sign==='positive'?'加分':'减分';
+      const backdrop=document.createElement('div');
+      backdrop.className='modal-backdrop';
+      backdrop.dataset.quickRulePicker='true';
+      const buttons=rules.map(r=>'<button class="quick-rule-option '+(sign==='positive'?'positive':'negative')+'" data-quick-rule="'+esc(r.id)+'" type="button"><span>'+esc(r.name)+'</span><strong>'+fmt(r.points)+'</strong></button>').join('');
+      backdrop.innerHTML='<div class="modal" role="dialog" aria-modal="true"><div class="modal-head"><h2>'+title+'</h2><button class="modal-close" data-close-quick-rule type="button" aria-label="关闭">×</button></div><p class="quick-rule-help">学生：'+esc(student?.name||'未知学生')+'。请选择要记录的'+actionText+'项目。</p><div class="quick-rule-list">'+buttons+'</div></div>';
+      document.body.appendChild(backdrop);
+      backdrop.addEventListener('click',event=>{
+        if(event.target===backdrop||event.target.closest('[data-close-quick-rule]')){closeQuickRulePicker();return;}
+        const button=event.target.closest('[data-quick-rule]');
+        if(button){closeQuickRulePicker();score(studentId,button.dataset.quickRule);}
+      });
+    }
     const cardBindView = bindView;
-    bindView = function(){ cardBindView(); document.querySelectorAll('[data-quick-score]').forEach(b=>b.onclick=()=>{ const id=b.dataset.quickScore,ruleId=b.dataset.quickSign==='positive'?document.getElementById('quickPositiveRule')?.value:document.getElementById('quickNegativeRule')?.value; if(!ruleId){toast(b.dataset.quickSign==='positive'?'请先添加加分规则':'请先添加扣分规则');return;} score(id,ruleId); }); const qp=document.getElementById('quickPositiveRule'); if(qp)qp.onchange=()=>{state.quickPositiveRule=qp.value;}; const qn=document.getElementById('quickNegativeRule'); if(qn)qn.onchange=()=>{state.quickNegativeRule=qn.value;}; };
+    bindView = function(){ cardBindView(); document.querySelectorAll('[data-quick-score]').forEach(b=>b.onclick=()=>openQuickRulePicker(b.dataset.quickScore,b.dataset.quickSign)); };
     studentRows = function(){ const all=filteredStudents(); if(!all.length)return '<div class="empty">没有找到学生</div>'; return `<div class="student-dense-grid">${all.map(s=>{const score=scoreFor(s.id);return `<div class="student-dense-item"><label class="student-dense-main"><input type="checkbox" class="student-check" data-id="${s.id}" ${state.selected.has(s.id)?'checked':''} aria-label="选择${esc(s.name)}"><span class="student-dense-name" title="${esc(s.name)}">${esc(s.name)}</span></label><span class="student-dense-score ${score<0?'negative':''}">${score}</span><button class="student-dense-btn minus" data-quick-score="${s.id}" data-quick-sign="negative" type="button" aria-label="给${esc(s.name)}减分">−</button><button class="student-dense-btn plus" data-quick-score="${s.id}" data-quick-sign="positive" type="button" aria-label="给${esc(s.name)}加分">＋</button></div>`}).join('')}</div>`; };
     const denseHomeView = homeView;
     homeView = function(){ return denseHomeView().replace('<div class="grid two" style="margin-top:18px">','<div class="grid home-layout" style="margin-top:18px">'); };
