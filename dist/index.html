@@ -62,7 +62,14 @@
     .quick-rule-help { color:var(--muted); font-size:14px; line-height:1.5; margin:0; }
     @media (min-width:1250px) { .student-dense-grid { grid-template-columns:repeat(6,minmax(190px,1fr)); } }
     @media (max-width:850px) { .student-dense-grid { grid-template-columns:repeat(3,minmax(120px,1fr)); gap:7px; } .student-dense-item { grid-template-columns:minmax(0,1fr) 29px 26px 26px; gap:4px; padding-left:7px; padding-right:5px; } .student-dense-main { font-size:13px; } }
-    @media (max-width:520px) { .student-dense-grid { grid-template-columns:repeat(2,minmax(125px,1fr)); } }
+    @media (max-width:520px) {
+      .student-dense-grid { grid-template-columns:repeat(2,minmax(125px,1fr)); }
+      .student-dense-item { min-height:72px; grid-template-columns:minmax(0,1fr) 28px 28px; grid-template-rows:auto auto; row-gap:5px; padding:8px; }
+      .student-dense-main { grid-column:1 / -1; }
+      .student-dense-score { grid-column:1; justify-self:start; text-align:left; }
+      .student-dense-btn.minus { grid-column:2; justify-self:end; }
+      .student-dense-btn.plus { grid-column:3; justify-self:end; }
+    }
     .home-layout { grid-template-columns:1fr; }
     .student-toolbar select#quickPositiveRule, .student-toolbar select#quickNegativeRule { width:230px; }
     @media (max-width:650px) { .student-toolbar select#quickPositiveRule, .student-toolbar select#quickNegativeRule { width:100%; } }
