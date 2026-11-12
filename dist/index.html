@@ -73,6 +73,13 @@
     .home-layout { grid-template-columns:1fr; }
     .student-toolbar select#quickPositiveRule, .student-toolbar select#quickNegativeRule { width:230px; }
     @media (max-width:650px) { .student-toolbar select#quickPositiveRule, .student-toolbar select#quickNegativeRule { width:100%; } }
+    .manual-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:8px; margin:16px 0; }
+    .manual-row { display:flex; align-items:center; gap:10px; border:1px solid var(--line); border-radius:12px; padding:8px 10px; }
+    .manual-row label { flex:1; min-width:0; overflow-wrap:anywhere; font-weight:700; }
+    .manual-row input { width:100px; margin:0; }
+    .manual-note { max-width:400px; }
+    .manual-actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    @media (max-width:550px) { .manual-list { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
@@ -110,7 +117,7 @@
     async function logout(){ localStorage.removeItem("class_points_session"); state.session=null;state.user=null;state.classData=null;render(); }
     async function loadData(){ const hadClass=Boolean(state.classData?.id); setLoading(true); try{ let cs=await api("classes?select=*&order=created_at.asc"); if(!cs.length) { const made=await api("classes",{method:"POST",body:JSON.stringify({owner_id:state.user.id,name:"我的班级"})}); cs=made; } if(!cs?.[0]?.id) throw new Error("未找到班级数据，请重新登录"); state.classData=cs[0]; const cid=state.classData.id; [state.groups,state.students,state.rules,state.records]=await Promise.all([api(`groups?class_id=eq.${cid}&select=*&order=created_at.asc`),api(`students?class_id=eq.${cid}&select=*&active=eq.true&order=created_at.asc`),api(`scoring_rules?class_id=eq.${cid}&select=*&active=eq.true&order=created_at.asc`),api(`score_records?class_id=eq.${cid}&select=*&order=created_at.desc`)]); } catch(e){ if(!hadClass)state.classData=null; throw e; } finally{setLoading(false);} }
     function ensureClass(){ if(!state.classData?.id){toast("班级数据尚未加载，请刷新页面或重新登录");return false;} return true; }
-    function renderApp(){ const nav=[['home','记分台'],['rank','排行榜'],['records','积分记录'],['settings','设置']]; document.getElementById("app").innerHTML=`<div class="app-shell"><header class="topbar"><div class="topbar-left"><div class="mini-mark">✿</div><div class="topbar-title">课堂积分</div></div><div class="topbar-user"><span>${esc(state.user?.email||"")}</span><button class="btn small" id="logoutBtn">退出</button></div></header><main class="page"><div class="page-head"><div><h1><span class="flower">✿</span>${esc(state.classData?.name||"我的班级")}</h1><p>把课堂表现变成清晰、即时、可追溯的积分。</p></div><div class="head-actions"><select id="classSelect"><option>${esc(state.classData?.name||"我的班级")}</option></select><button class="btn primary" id="refreshBtn">刷新数据</button></div></div><nav class="tabs">${nav.map(([id,t])=>`<button class="tab ${state.tab===id?'active':''}" data-tab="${id}">${t}</button>`).join("")}</nav><section id="view"></section></main></div>`; document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{state.tab=b.dataset.tab;renderApp()}); document.getElementById("logoutBtn").onclick=logout; document.getElementById("refreshBtn").onclick=async()=>{try{await loadData();renderApp();}catch(e){toast("数据加载失败："+e.message);if(e.status===401)logout();}}; const v=document.getElementById("view"); if(state.tab==='home') v.innerHTML=homeView(); if(state.tab==='rank') v.innerHTML=rankView(); if(state.tab==='records') v.innerHTML=recordsView(); if(state.tab==='settings') v.innerHTML=settingsView(); bindView(); }
+    function renderApp(){ const nav=[['home','记分台'],['manual','自由录入'],['rank','排行榜'],['records','积分记录'],['settings','设置']]; document.getElementById("app").innerHTML=`<div class="app-shell"><header class="topbar"><div class="topbar-left"><div class="mini-mark">✿</div><div class="topbar-title">课堂积分</div></div><div class="topbar-user"><span>${esc(state.user?.email||"")}</span><button class="btn small" id="logoutBtn">退出</button></div></header><main class="page"><div class="page-head"><div><h1><span class="flower">✿</span>${esc(state.classData?.name||"我的班级")}</h1><p>把课堂表现变成清晰、即时、可追溯的积分。</p></div><div class="head-actions"><select id="classSelect"><option>${esc(state.classData?.name||"我的班级")}</option></select><button class="btn primary" id="refreshBtn">刷新数据</button></div></div><nav class="tabs">${nav.map(([id,t])=>`<button class="tab ${state.tab===id?'active':''}" data-tab="${id}">${t}</button>`).join("")}</nav><section id="view"></section></main></div>`; document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{state.tab=b.dataset.tab;renderApp()}); document.getElementById("logoutBtn").onclick=logout; document.getElementById("refreshBtn").onclick=async()=>{try{await loadData();renderApp();}catch(e){toast("数据加载失败："+e.message);if(e.status===401)logout();}}; const v=document.getElementById("view"); if(state.tab==='home') v.innerHTML=homeView(); if(state.tab==='manual') v.innerHTML=manualView(); if(state.tab==='rank') v.innerHTML=rankView(); if(state.tab==='records') v.innerHTML=recordsView(); if(state.tab==='settings') v.innerHTML=settingsView(); bindView(); }
     function homeView(){ const total=state.students.length, points=state.records.filter(r=>!r.reversed_at).reduce((a,r)=>a+Number(r.points),0), recent=state.records.filter(r=>!r.reversed_at).slice(0,5); return `<div class="grid stats"><div class="card metric"><div class="label">学生人数</div><div class="value">${total}</div><div class="hint">当前班级</div></div><div class="card metric"><div class="label">小组数量</div><div class="value">${state.groups.length}</div><div class="hint">可随时调整成员</div></div><div class="card metric"><div class="label">积分规则</div><div class="value">${state.rules.length}</div><div class="hint">加分与减分</div></div><div class="card metric"><div class="label">当前总积分</div><div class="value">${fmt(points)}</div><div class="hint">所有有效记录合计</div></div></div><div class="grid two" style="margin-top:18px"><div class="card"><h2>快速记分</h2><div class="student-toolbar"><input id="studentSearch" placeholder="搜索学生姓名" value="${esc(state.search)}"><label class="check-all"><input type="checkbox" id="selectAll" ${allCurrentStudentsSelected()?'checked':''}> 全选当前学生</label><select id="batchRule"><option value="">批量加分规则…</option>${state.rules.map(r=>`<option value="${r.id}">${esc(r.name)}（${fmt(r.points)}）</option>`).join("")}</select><button class="btn primary" id="batchBtn">批量应用</button></div><div class="student-list">${studentRows()}</div></div><div class="card"><h2>最近记录</h2>${recent.length?`<div class="rank-list">${recent.map(r=>{const s=state.students.find(x=>x.id===r.student_id);return `<div class="rank-row"><div class="rank-no">${Number(r.points)>0?'＋':'－'}</div><div><div class="rank-name">${esc(s?.name||'已删除学生')}</div><div class="rank-meta">${esc(r.rule_name_snapshot)} · ${new Date(r.created_at).toLocaleString()}</div></div><div class="rank-score ${Number(r.points)>0?'points pos':'points neg'}">${fmt(r.points)}</div></div>`}).join("")}</div>`:'<div class="empty">还没有积分记录</div>'}<button class="btn ghost" id="allRecordsBtn" style="margin-top:12px">查看全部记录 →</button></div></div>`; }
     function filteredStudents(){ const q=state.search.trim().toLowerCase(); return state.students.filter(s=>(state.groupFilter==='all'||s.group_id===state.groupFilter)&&s.name.toLowerCase().includes(q)); }
     function currentStudents(){ return filteredStudents(); }
@@ -192,6 +199,41 @@
     studentRows = function(){ const all=filteredStudents(); if(!all.length)return '<div class="empty">没有找到学生</div>'; return `<div class="student-dense-grid">${all.map(s=>{const score=scoreFor(s.id);return `<div class="student-dense-item"><label class="student-dense-main"><input type="checkbox" class="student-check" data-id="${s.id}" ${state.selected.has(s.id)?'checked':''} aria-label="选择${esc(s.name)}"><span class="student-dense-name" title="${esc(s.name)}">${esc(s.name)}</span></label><span class="student-dense-score ${score<0?'negative':''}">${score}</span><button class="student-dense-btn minus" data-quick-score="${s.id}" data-quick-sign="negative" type="button" aria-label="给${esc(s.name)}减分">−</button><button class="student-dense-btn plus" data-quick-score="${s.id}" data-quick-sign="positive" type="button" aria-label="给${esc(s.name)}加分">＋</button></div>`}).join('')}</div>`; };
     const denseHomeView = homeView;
     homeView = function(){ return denseHomeView().replace('<div class="grid two" style="margin-top:18px">','<div class="grid home-layout" style="margin-top:18px">'); };
+
+    state.manualValues = {};
+    state.manualNote = '';
+    function manualView(){
+      return `<div class="card"><h2>自由加减分</h2><p class="rank-note">给需要记分的学生填写合计分数；加分填正数，扣分填负数，如 3 或 -2。留空的学生不会生成记录。</p><label for="manualNote">备注（选填，所有记录共用）</label><input class="manual-note" id="manualNote" maxlength="100" placeholder="例如：数学课积分" value="${esc(state.manualNote)}"><form id="manualForm"><div class="manual-list">${state.students.map((s,i)=>`<div class="manual-row"><label for="manual-${i}">${esc(s.name)}</label><input id="manual-${i}" data-manual-id="${esc(s.id)}" type="text" inputmode="text" autocomplete="off" placeholder="如 -2" value="${esc(state.manualValues[s.id]||'')}" aria-label="${esc(s.name)}的合计分数"></div>`).join('')||'<div class="empty">还没有学生，请先在设置中添加。</div>'}</div><div class="manual-actions"><button class="btn primary" type="submit" ${state.students.length?'':'disabled'}>提交积分</button><button class="btn" type="button" id="clearManual">清空填写</button></div></form></div>`;
+    }
+    async function submitManual(e){
+      e.preventDefault(); if(!ensureClass()||state.manualSubmitting)return;
+      const entries=[];
+      for(const student of state.students){
+        const raw=(state.manualValues[student.id]||'').trim(); if(!raw)continue;
+        if(!/^[+-]?\d+$/.test(raw)||!Number.isSafeInteger(Number(raw))||Number(raw)===0||Math.abs(Number(raw))>2147483647){toast(student.name+'：请输入非零整数');return;}
+        entries.push({student,points:Number(raw)});
+      }
+      if(!entries.length){toast('请至少填写一位学生的分数');return;}
+      if(!confirm(`确定为 ${entries.length} 位学生录入积分吗？提交后可以在积分记录中撤销。`))return;
+      const name=state.manualNote.trim()||'自由加减分';
+      const records=entries.map(({student,points})=>({class_id:state.classData.id,student_id:student.id,rule_id:null,rule_name_snapshot:name,points,created_by:state.user.id}));
+      state.manualSubmitting=true; setLoading(true);
+      try {
+        await api('score_records',{method:'POST',body:JSON.stringify(records)});
+        state.manualValues={}; state.manualNote='';
+        try { await loadData(); renderApp(); toast(`已为 ${entries.length} 位学生录入积分`); }
+        catch(error){ renderApp(); toast('积分已提交，但刷新失败，请手动刷新'); }
+      } catch(error){ toast('录入失败：'+error.message); }
+      finally { state.manualSubmitting=false; setLoading(false); }
+    }
+    const manualBindView=bindView;
+    bindView=function(){
+      manualBindView();
+      document.querySelectorAll('[data-manual-id]').forEach(input=>input.oninput=()=>{state.manualValues[input.dataset.manualId]=input.value;});
+      const note=document.getElementById('manualNote'); if(note)note.oninput=()=>{state.manualNote=note.value;};
+      const form=document.getElementById('manualForm'); if(form)form.onsubmit=submitManual;
+      const clear=document.getElementById('clearManual'); if(clear)clear.onclick=()=>{if(Object.values(state.manualValues).some(v=>v.trim())&&!confirm('确定清空已填写的分数吗？'))return;state.manualValues={};state.manualNote='';renderApp();};
+    };
   </script>
 </body>
 </html>
